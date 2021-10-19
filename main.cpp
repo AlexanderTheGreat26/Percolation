@@ -35,19 +35,21 @@ std::vector<node> cluster_growth (std::vector<node> & lattice);
 
 std::string exec (const std::string& str);
 
-void data_file_creation (const std::string & name, std::vector<node> & data, int & number_of_test);
+void data_file_creation (const std::string & name, std::vector<node> & data, const int & number_of_test);
+
+void plot (const double & left, const double & right, const std::string & name, const int & count_of_interation);
 
 
 int main() {
     std::string trajectory_files_path = std::move(exec("rm -rf trajectories && mkdir trajectories && cd trajectories && echo $PWD"));
     std::string trajectory_files_name = trajectory_files_path + '/' + "percolation_coordinates";
     std::vector<node> lattice = std::move(lattice_generation(-1, 1));
-    int iteration = 1;
-    data_file_creation(trajectory_files_name, lattice, iteration);
-    std::vector<node> cluster = std::move(cluster_growth(lattice));
-    iteration = 2;
-    data_file_creation(trajectory_files_name, cluster, iteration);
-
+    data_file_creation(trajectory_files_path + "/lattice", lattice, 0);
+    for (int i = 0; i < 100; ++i) {
+        std::vector<node> cluster = std::move(cluster_growth(lattice));
+        data_file_creation(trajectory_files_name, cluster, i);
+    }
+    plot(left_border, right_border, trajectory_files_name, 100);
     return 0;
 }
 
@@ -70,7 +72,7 @@ std::string tuple_to_string (const Tuple& t) {
     return tuple_to_string_impl(t, std::make_index_sequence<size>{});
 }
 
-void data_file_creation (const std::string & name, std::vector<node> & data, int & number_of_test) {
+void data_file_creation (const std::string & name, std::vector<node> & data, const int & number_of_test) {
     std::ofstream fout;
     fout.open(name + '.' + toString(number_of_test), std::ios::app);
     for (auto & i : data)
@@ -89,10 +91,6 @@ std::string exec (const std::string& str) {
         result += buffer.data();
     result = result.substr(0, result.length()-1);
     return result;
-}
-
-bool is_equal (const double & a, const double & b) {
-    return std::fabs(a - b) < std::numeric_limits<double>::epsilon();
 }
 
 
@@ -149,27 +147,28 @@ void vector_offset (std::tuple<Tp...>& vector, std::tuple<Tp...>& frame_of_refer
 std::vector<node> cluster_growth (std::vector<node> & lattice) {
     std::uniform_int_distribution<> dis (0, N);
     std::vector<node> cluster;
-    cluster.emplace_back(lattice[dis(gen)]); // Random start node
+    cluster.emplace_back(lattice[dis(gen)]); // Random start node on the one border.
     int i = 0; // Number of cluster node.
     node direction_vector = std::make_tuple(0, 1);
-    //do {
     while (inside(cluster[i])) {
         std::string next_step = next_step_direction();
         switch (fnv1a(next_step.c_str())) {
             case fnv1a("left"):
-                direction_vector = rotation_matrix(direction_vector, std::acos(std::cos(-1)));
+                direction_vector = std::move(rotation_matrix(direction_vector, -pi/2.0));
+                break;
             case fnv1a("right"):
-                direction_vector = rotation_matrix(direction_vector, std::acos(cos(1)));
+                direction_vector = std::move(rotation_matrix(direction_vector, pi/2.0));
+                break;
+            /*case fnv1a("directly"):
+                direction_vector = std::move(rotation_matrix(direction_vector, 0));
+                break;*/
         }
-        node buff;
-
-        vector_scalar_multiplication(direction_vector, step, buff);
+        node new_moving_direction, new_node_location; // Will as a result of moving in new direction.
+        vector_scalar_multiplication(direction_vector, step, new_moving_direction);
         ++i;
-
-        vector_offset(cluster[i-1], buff, buff);
-        cluster.emplace_back(buff);
+        vector_offset(cluster[i-1], new_moving_direction, new_node_location);
+        cluster.emplace_back(new_node_location);
     }
-    //} while (inside(cluster[i]));
     return cluster;
 }
 
@@ -193,3 +192,24 @@ std::vector<node> lattice_generation (const double & left, const double & right)
     return lattice;
 }
 
+void plot (const double & left, const double & right, const std::string & name, const int & count_of_interation) {
+    std::string range = "[" + toString(left) + ":" + toString(right) + "]";
+    for (int i = 0; i < count_of_interation; ++i) {
+        FILE *gp = popen("gnuplot  -persist", "w");
+        if (!gp) throw std::runtime_error("Error opening pipe to GNUplot.");
+        std::vector<std::string> stuff = {"set term jpeg size 700, 700",
+                                          "set output \'" + name + toString(i) + ".jpg\'",
+                                          "set title \'Iteration: " + toString(i) + '\'',
+                                          "set grid xtics ytics",
+                                          "set xrange " + range,
+                                          "set yrange " + range,
+                                          "set key off",
+                                          "set ticslevel 0",
+                                          "set border 4095",
+                                          "plot \'lattice.0\' using 1:2 pt 6,\
+                                          \'" + name + '.' + toString(i) + "\' using 1:2 pt 7 w lines"};
+        for (const auto & it: stuff)
+            fprintf(gp, "%s\n", it.c_str());
+        pclose(gp);
+    }
+}
