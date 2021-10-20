@@ -13,9 +13,9 @@
 #include <sstream>
 
 
-typedef std::vector<std::vector<bool>> cells;
+typedef std::vector<std::vector<bool>> bool_cells;
 typedef std::pair<int, int> index;
-
+typedef std::pair<double, double> data;
 
 const int N = 10;
 const int left_border = 0;
@@ -27,16 +27,42 @@ std::random_device rd;  // Will be used to obtain a seed for the random number e
 std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
 
 
-void mem_allocation_2d (cells & vector, const int &dim);
+void mem_allocation_2d (bool_cells & vector, const int &dim);
+
+std::vector<index> percolation_nodes (int & nodes_count, const int & left, const int & right);
+
+void lattice_filling (std::vector<index> & occupied_cells, bool_cells & lattice);
+
+bool infinite_cluster (bool_cells & lattice);
+
+void data_file_creation (const std::string & name, std::vector<data> & exp_data);
+
 
 
 int main () {
-    cells lattice (N);
+    bool_cells lattice (N);
     mem_allocation_2d (lattice, N);
+    std::vector<data> P_p;
+    //for // number of experiments
+        //for
+            int filled_nodes_count = 42; // Will be used for a loop later.
+            int infinite_clusters_count = 0;
+            std::vector<index> filled_nodes = std::move(percolation_nodes(filled_nodes_count, left_border, right_border));
+            lattice_filling(filled_nodes, lattice);
+            if (infinite_cluster(lattice))
+                ++infinite_clusters_count;
+            //}
+        P_p.emplace_back(std::make_pair(filled_nodes_count/100.0, infinite_clusters_count / 100.0));
+    //}
+    data_file_creation("data", P_p);
 
 
     return 0;
 }
+
+
+
+
 
 
 template<typename T, size_t... Is>
@@ -61,7 +87,7 @@ bool free_cell (index & cell, std::vector<index> & occupied_cells) {
 
 
 std::vector<index> percolation_nodes (int & nodes_count, const int & left, const int & right) {
-    std::uniform_int_distribution<> dis (0, N);
+    std::uniform_int_distribution<> dis (left, right);
     std::vector<index> occupied_cells;
     for (int k = 0; k < nodes_count; ++k) {
         index ij;
@@ -76,13 +102,13 @@ std::vector<index> percolation_nodes (int & nodes_count, const int & left, const
 }
 
 
-void lattice_filling (std::vector<index> & occupied_cells, cells & lattice) {
+void lattice_filling (std::vector<index> & occupied_cells, bool_cells & lattice) {
     for (auto & occupied_cell : occupied_cells)
         lattice[occupied_cell.first][occupied_cell.second] = true;
 }
 
 
-std::vector<index> possible_origin_points (cells & lattice) {
+std::vector<index> possible_origin_points (bool_cells & lattice) {
     std::vector<index> origins;
     for (int i = 0; i < N; ++i) {
         if (lattice[i][0])
@@ -98,21 +124,95 @@ std::vector<index> possible_origin_points (cells & lattice) {
 }
 
 
-bool infinite_cluster (cells & lattice) {
+
+
+
+// Returns true, if there're two clusters opposite borders.
+bool possibility_of_existence_inf_cluster (std::vector<index> & origins) {
+    for (int i = 0; i < origins.size(); ++i)
+        for (int j = 0; j < origins.size(); ++j) {
+            if (i == j) continue;
+            if (origins[i].first == origins[j].first && origins[i].second != origins[j].second ||
+                origins[i].second == origins[j].second && origins[i].first != origins[j].first)
+                return true;
+        }
+    return false;
+}
+
+
+std::vector<index> neighbors (index & origin, bool_cells & lattice) {
+    std::vector<index> trues;
+    if (origin.second != N && lattice[origin.first][origin.second+1])
+        trues.emplace_back(std::make_pair(origin.first, origin.second+1));
+    if (origin.first != 0 && lattice[origin.first-1][origin.second])
+        trues.emplace_back(std::make_pair(origin.first-1, origin.second));
+    if (origin.second != 0 && lattice[origin.first][origin.second-1])
+        trues.emplace_back(std::make_pair(origin.first, origin.second-1));
+    if (origin.first != N && lattice[origin.first+1][origin.second])
+        trues.emplace_back(std::make_pair(origin.first+1, origin.second));
+    return trues;
+}
+
+
+void cluster_growing (std::vector<index> & origins, bool_cells & lattice) {
+    for (int i = 0; i < origins.size(); ++i) {
+        std::vector<index> possible_next_steps = std::move(neighbors(origins[i], lattice));
+        if (!possible_next_steps.empty()) {
+            for (int j = 0; j < possible_next_steps.size(); ++j) {
+
+            }
+        } else {
+            continue;
+        }
+    }
+}
+
+
+bool infinite_cluster (bool_cells & lattice) {
     std::vector<index> origins = std::move(possible_origin_points(lattice));
     int origins_count = origins.size();
-    if (origins_count == 1) return false;
+    if (origins_count == 1 || !possibility_of_existence_inf_cluster(origins)) return false;
     for (int i = 0; i < origins_count; ++i) {
         index current_index = origins[i];
         do {
 
         } while ();
     }
+
 }
 
 
 // Did not allocate memory - died.
-void mem_allocation_2d (cells & vector, const int & dim) {
+void mem_allocation_2d (bool_cells & vector, const int & dim) {
     for (auto & i : vector)
         i.resize(dim);
+}
+
+
+template <typename T>
+std::string toString (T val) {
+    std::ostringstream oss;
+    oss << val;
+    return oss.str();
+}
+
+
+template<typename T, size_t... Is>
+std::string tuple_to_string_impl (T const& t, std::index_sequence<Is...>) {
+    return ((toString(std::get<Is>(t)) + '\t') + ...);
+}
+
+template <class Tuple>
+std::string tuple_to_string (const Tuple& t) {
+    constexpr auto size = std::tuple_size<Tuple>{};
+    return tuple_to_string_impl(t, std::make_index_sequence<size>{});
+}
+
+
+void data_file_creation (const std::string & name, std::vector<data> & exp_data) {
+    std::ofstream fout;
+    fout.open(name + '.' + "txt", std::ios::app);
+    for (auto & i : exp_data)
+        fout << tuple_to_string(i) << std::endl;
+    fout.close();
 }
