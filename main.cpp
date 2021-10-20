@@ -19,7 +19,7 @@ typedef std::pair<double, double> data;
 
 const int N = 10;
 const int left_border = 0;
-const int right_border = 10;
+const int right_border = 9;
 
 
 
@@ -43,41 +43,32 @@ int main () {
     bool_cells lattice (N);
     mem_allocation_2d (lattice, N);
     std::vector<data> P_p;
+    int infinite_clusters_count = 0;
     //for // number of experiments
-        //for
-            int filled_nodes_count = 42; // Will be used for a loop later.
-            int infinite_clusters_count = 0;
-            std::vector<index> filled_nodes = std::move(percolation_nodes(filled_nodes_count, left_border, right_border));
+        for (int i = 0; i < 100; ++i) {
+            int filled_nodes_count = 25; // Will be used for a loop later.
+
+            std::vector<index> filled_nodes = std::move(
+                    percolation_nodes(filled_nodes_count, left_border, right_border));
             lattice_filling(filled_nodes, lattice);
             if (infinite_cluster(lattice))
                 ++infinite_clusters_count;
+        }
+        std::cout << infinite_clusters_count;
             //}
-        P_p.emplace_back(std::make_pair(filled_nodes_count/100.0, infinite_clusters_count / 100.0));
+        //P_p.emplace_back(std::make_pair(filled_nodes_count/100.0, infinite_clusters_count / 100.0));
     //}
-    data_file_creation("data", P_p);
+    //data_file_creation("data", P_p);
 
 
     return 0;
 }
 
 
-template<typename T, size_t... Is>
-bool equal_index_impl (T const& t, T const& t1, std::index_sequence<Is...>, std::index_sequence<Is...>) {
-    return ((std::get<Is>(t) == std::get<Is>(t1)) & ...);
-}
-
-// Returns true if two tuples (t, t1) contains the same numbers.
-template <class Tuple>
-bool equal_index (const Tuple& t, const Tuple& t1) {
-    constexpr auto size = std::tuple_size<Tuple>{};
-    return equal_index_impl(t, t1, std::make_index_sequence<size>{}, std::make_index_sequence<size>{});
-}
-
-
-bool free_cell (index & cell, std::vector<index> & occupied_cells) {
+bool occupied_cell (index & cell, std::vector<index> & occupied_cells) {
     bool ans = true;
     for (auto & i : occupied_cells)
-        ans &= (equal_index(cell, i));
+        ans &= (cell == i);
     return ans;
 }
 
@@ -85,13 +76,14 @@ bool free_cell (index & cell, std::vector<index> & occupied_cells) {
 std::vector<index> percolation_nodes (int & nodes_count, const int & left, const int & right) {
     std::uniform_int_distribution<> dis (left, right);
     std::vector<index> occupied_cells;
+    occupied_cells.emplace_back(std::make_pair(5, 5));
     for (int k = 0; k < nodes_count; ++k) {
         index ij;
         do {
             int i = dis(gen);
             int j = dis(gen);
             ij = std::make_pair(i, j);
-        } while (!free_cell(ij, occupied_cells));
+        } while (occupied_cell(ij, occupied_cells));
         occupied_cells.emplace_back(ij);
     }
     return occupied_cells;
@@ -99,8 +91,8 @@ std::vector<index> percolation_nodes (int & nodes_count, const int & left, const
 
 
 void lattice_filling (std::vector<index> & occupied_cells, bool_cells & lattice) {
-    for (auto & occupied_cell : occupied_cells)
-        lattice[occupied_cell.first][occupied_cell.second] = true;
+    for (auto & i : occupied_cells)
+        lattice[i.first][i.second] = true;
 }
 
 
@@ -109,12 +101,18 @@ std::vector<index> possible_origin_points (bool_cells & lattice) {
     for (int i = 0; i < N; ++i) {
         if (lattice[i][0])
             origins.emplace_back(std::make_pair(i, 0));
-        if (lattice[i][N])
-            origins.emplace_back(std::make_pair(i, N));
+        if (lattice[i][N-1])
+            origins.emplace_back(std::make_pair(i, N-1));
         if (lattice[0][i])
             origins.emplace_back(std::make_pair(0, i));
-        if (lattice[N][i])
-            origins.emplace_back(std::make_pair(N, i));
+        if (lattice[N-1][i])
+            origins.emplace_back(std::make_pair(N-1, i));
+    }
+    for (int i = 0; i < origins.size();) {
+        if (std::find(origins.begin(), origins.begin() + i, origins[i]) != origins.begin() + i)
+            origins.erase(origins.begin() + i);
+        else
+            i++;
     }
     return origins;
 }
@@ -138,13 +136,13 @@ bool possibility_of_existence_inf_cluster (std::vector<index> & origins) {
 
 std::vector<index> neighbors (index & origin, bool_cells & lattice) {
     std::vector<index> trues;
-    if (origin.second != N && lattice[origin.first][origin.second+1])
+    if (origin.second != N-1 && lattice[origin.first][origin.second+1])
         trues.emplace_back(std::make_pair(origin.first, origin.second+1));
     if (origin.first != 0 && lattice[origin.first-1][origin.second])
         trues.emplace_back(std::make_pair(origin.first-1, origin.second));
     if (origin.second != 0 && lattice[origin.first][origin.second-1])
         trues.emplace_back(std::make_pair(origin.first, origin.second-1));
-    if (origin.first != N && lattice[origin.first+1][origin.second])
+    if (origin.first != N-1 && lattice[origin.first+1][origin.second])
         trues.emplace_back(std::make_pair(origin.first+1, origin.second));
     return trues;
 }
@@ -153,10 +151,10 @@ std::vector<index> neighbors (index & origin, bool_cells & lattice) {
 std::vector<index> opposites (index origin, std::vector<index> & origins) {
     std::vector<index> result;
     for (auto & i : origins)
-        if (origin.first == 0 && i.first == N ||
-            origin.second == 0 && i.second == N ||
-            origin.first == N && i.first == 0 ||
-            origin.second == N && i.second == 0)
+        if (origin.first == 0 && i.first == N-1 ||
+            origin.second == 0 && i.second == N-1 ||
+            origin.first == N-1 && i.first == 0 ||
+            origin.second == N-1 && i.second == 0)
             result.emplace_back(i);
     return result;
 }
@@ -164,28 +162,26 @@ std::vector<index> opposites (index origin, std::vector<index> & origins) {
 
 bool end_of_the_road (const index & position, const std::vector<index> & possible_ends) {
     for (auto & possible_end : possible_ends)
-        if (equal_index(position, possible_end))
+        if (position == possible_end)
             return true;
     return false;
 }
 
 
-index cluster_growing (std::vector<index> origins, bool_cells & lattice) {
-    std::vector<index> next_steps;
-    index position;
-    for (auto & origin : origins) {
-        std::vector<index> possible_next_steps = std::move(neighbors(origin, lattice));
-        if (!possible_next_steps.empty()) {
-            for (int j = 0; j < possible_next_steps.size(); ++j) {
-                position = possible_next_steps[j];
-                std::vector<index> possible_ends = std::move(opposites(possible_next_steps[j], possible_next_steps));
-                do {
-                    position = std::move(cluster_growing(possible_next_steps, lattice));
-                    next_steps = std::move(neighbors(position, lattice));
-                } while (!end_of_the_road(position, possible_ends) || !next_steps.empty());
-            }
-        } else {
-            continue;
+index cluster_growing (index & position, bool_cells & lattice, std::vector<index> & opposite, bool & infinite_bit) {
+    std::vector<index> possible_next_steps = std::move(neighbors(position, lattice));
+    static int step = 0;
+    static index location = std::make_pair(16, 16);
+    if ((possible_next_steps.empty() || location == position) && !end_of_the_road(position, opposite))
+        return position;
+    ++step;
+    if (step%3 == 0) location = position;
+    if (end_of_the_road(position, opposite)) {
+        infinite_bit = true;
+        return position;
+    } else {
+        for (auto & possible_next_step : possible_next_steps) {
+            position = cluster_growing(possible_next_step, lattice, opposite, infinite_bit);
         }
     }
     return position;
@@ -193,15 +189,18 @@ index cluster_growing (std::vector<index> origins, bool_cells & lattice) {
 
 
 bool infinite_cluster (bool_cells & lattice) {
+    bool infinite_bit = false;
     std::vector<index> origins = std::move(possible_origin_points(lattice));
     int origins_count = origins.size();
-    if (origins_count <= 1) return false;
-    for (int i = 0; i < origins_count; ++i) {
-        index final_position = cluster_growing(origins, lattice);
-        if (end_of_the_road(final_position, opposites(origins[i], origins)))
-            return true;
+    if (origins_count <= 1)
+        return infinite_bit;
+    for (int i = 0; i < origins.size(); ++i) {
+        std::vector<index> possible_ends = opposites(origins[i], origins);
+        if (possible_ends.empty()) continue;
+        cluster_growing(origins[i], lattice, possible_ends, infinite_bit);
+        if (infinite_bit) break;
     }
-    return false;
+    return infinite_bit;
 }
 
 
