@@ -61,10 +61,6 @@ int main () {
 }
 
 
-
-
-
-
 template<typename T, size_t... Is>
 bool equal_index_impl (T const& t, T const& t1, std::index_sequence<Is...>, std::index_sequence<Is...>) {
     return ((std::get<Is>(t) == std::get<Is>(t1)) & ...);
@@ -126,7 +122,7 @@ std::vector<index> possible_origin_points (bool_cells & lattice) {
 
 
 
-
+// REWRITRE
 // Returns true, if there're two clusters opposite borders.
 bool possibility_of_existence_inf_cluster (std::vector<index> & origins) {
     for (int i = 0; i < origins.size(); ++i)
@@ -154,31 +150,58 @@ std::vector<index> neighbors (index & origin, bool_cells & lattice) {
 }
 
 
-void cluster_growing (std::vector<index> & origins, bool_cells & lattice) {
-    for (int i = 0; i < origins.size(); ++i) {
-        std::vector<index> possible_next_steps = std::move(neighbors(origins[i], lattice));
+std::vector<index> opposites (index origin, std::vector<index> & origins) {
+    std::vector<index> result;
+    for (auto & i : origins)
+        if (origin.first == 0 && i.first == N ||
+            origin.second == 0 && i.second == N ||
+            origin.first == N && i.first == 0 ||
+            origin.second == N && i.second == 0)
+            result.emplace_back(i);
+    return result;
+}
+
+
+bool end_of_the_road (const index & position, const std::vector<index> & possible_ends) {
+    for (auto & possible_end : possible_ends)
+        if (equal_index(position, possible_end))
+            return true;
+    return false;
+}
+
+
+index cluster_growing (std::vector<index> origins, bool_cells & lattice) {
+    std::vector<index> next_steps;
+    index position;
+    for (auto & origin : origins) {
+        std::vector<index> possible_next_steps = std::move(neighbors(origin, lattice));
         if (!possible_next_steps.empty()) {
             for (int j = 0; j < possible_next_steps.size(); ++j) {
-
+                position = possible_next_steps[j];
+                std::vector<index> possible_ends = std::move(opposites(possible_next_steps[j], possible_next_steps));
+                do {
+                    position = std::move(cluster_growing(possible_next_steps, lattice));
+                    next_steps = std::move(neighbors(position, lattice));
+                } while (!end_of_the_road(position, possible_ends) || !next_steps.empty());
             }
         } else {
             continue;
         }
     }
+    return position;
 }
 
 
 bool infinite_cluster (bool_cells & lattice) {
     std::vector<index> origins = std::move(possible_origin_points(lattice));
     int origins_count = origins.size();
-    if (origins_count == 1 || !possibility_of_existence_inf_cluster(origins)) return false;
+    if (origins_count <= 1) return false;
     for (int i = 0; i < origins_count; ++i) {
-        index current_index = origins[i];
-        do {
-
-        } while ();
+        index final_position = cluster_growing(origins, lattice);
+        if (end_of_the_road(final_position, opposites(origins[i], origins)))
+            return true;
     }
-
+    return false;
 }
 
 
