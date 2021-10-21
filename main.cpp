@@ -1,5 +1,4 @@
 #include <iostream>
-#include <cmath>
 #include <random>
 #include <vector>
 #include <utility>
@@ -9,7 +8,6 @@
 #include <array>
 #include <algorithm>
 #include <memory>
-#include <stdexcept>
 #include <sstream>
 
 
