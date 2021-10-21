@@ -152,7 +152,7 @@ std::vector<index> possible_origin_points (bool_cells & lattice) {
     return result;
 }*/
 
-bool check (bool_cells & data, int x, int y) {
+/*bool check (bool_cells & data, int x, int y) {
     if (x >= 0 && x < data.size())
         if (y >= 0 && y < data.size())
             return data[x][y];
@@ -173,10 +173,10 @@ std::vector<index> neighbors (index & position, bool_cells & lattice) {
     if (check(lattice, x, y-1))
         result.push_back(std::make_pair(x, y-1));
     return result;
-}
+}*/
 
 
-/*std::vector<index> neighbors (const bool_cells & lattice, const index & position) {
+std::vector<index> neighbors (const index & position, const bool_cells & lattice) {
     std::vector<index> result;
     if (position.first > 0)
         if (lattice[position.first-1][position.second])
@@ -191,7 +191,7 @@ std::vector<index> neighbors (index & position, bool_cells & lattice) {
         if (lattice[position.first][position.second+1])
             result.push_back({ position.first, position.second + 1 });
     return result;
-}*/
+}
 
 
 
