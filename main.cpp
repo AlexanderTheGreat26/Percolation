@@ -118,37 +118,25 @@ std::vector<index> possible_origin_points (bool_cells & lattice) {
 }
 
 
-
-
-// REWRITRE
-// Returns true, if there're two clusters opposite borders.
-bool possibility_of_existence_inf_cluster (std::vector<index> & origins) {
-    for (int i = 0; i < origins.size(); ++i)
-        for (int j = 0; j < origins.size(); ++j) {
-            if (i == j) continue;
-            if (origins[i].first == origins[j].first && origins[i].second != origins[j].second ||
-                origins[i].second == origins[j].second && origins[i].first != origins[j].first)
-                return true;
-        }
-    return false;
-}
-
-
 std::vector<index> neighbors (index & origin, bool_cells & lattice) {
     std::vector<index> trues;
-    if (origin.second != N-1 && lattice[origin.first][origin.second+1])
-        trues.emplace_back(std::make_pair(origin.first, origin.second+1));
-    if (origin.first != 0 && lattice[origin.first-1][origin.second])
-        trues.emplace_back(std::make_pair(origin.first-1, origin.second));
-    if (origin.second != 0 && lattice[origin.first][origin.second-1])
-        trues.emplace_back(std::make_pair(origin.first, origin.second-1));
-    if (origin.first != N-1 && lattice[origin.first+1][origin.second])
-        trues.emplace_back(std::make_pair(origin.first+1, origin.second));
+    if (origin.second != N-1)
+        if (lattice[origin.first][origin.second+1])
+            trues.push_back(std::make_pair(origin.first, origin.second+1));
+    if (origin.first != 0)
+        if (lattice[origin.first-1][origin.second])
+            trues.push_back(std::make_pair(origin.first-1, origin.second));
+    if (origin.second != 0)
+        if (lattice[origin.first][origin.second-1])
+            trues.push_back(std::make_pair(origin.first, origin.second-1));
+    if (origin.first != N-1)
+        if (lattice[origin.first+1][origin.second])
+            trues.push_back(std::make_pair(origin.first+1, origin.second));
     return trues;
 }
 
 
-std::vector<index> opposites (index origin, std::vector<index> & origins) {
+std::vector<index> opposites (index & origin, std::vector<index> & origins) {
     std::vector<index> result;
     for (auto & i : origins)
         if (origin.first == 0 && i.first == N-1 ||
@@ -170,19 +158,20 @@ bool end_of_the_road (const index & position, const std::vector<index> & possibl
 
 index cluster_growing (index & position, bool_cells & lattice, std::vector<index> & opposite, bool & infinite_bit) {
     std::vector<index> possible_next_steps = std::move(neighbors(position, lattice));
-    static int step = 0;
+    static long int step = 0;
     static index location = std::make_pair(16, 16);
     if ((possible_next_steps.empty() || location == position) && !end_of_the_road(position, opposite))
         return position;
-    ++step;
-    if (step%3 == 0) location = position;
+
+    if (step%2 == 0) location = position;
+    ++step; // If we have the same position after two iterations that means we have dead end.
+
     if (end_of_the_road(position, opposite)) {
         infinite_bit = true;
         return position;
     } else {
-        for (auto & possible_next_step : possible_next_steps) {
+        for (auto & possible_next_step : possible_next_steps)
             position = cluster_growing(possible_next_step, lattice, opposite, infinite_bit);
-        }
     }
     return position;
 }
@@ -192,7 +181,7 @@ bool infinite_cluster (bool_cells & lattice) {
     bool infinite_bit = false;
     std::vector<index> origins = std::move(possible_origin_points(lattice));
     int origins_count = origins.size();
-    if (origins_count <= 1)
+    if (origins_count < 2)
         return infinite_bit;
     for (int i = 0; i < origins.size(); ++i) {
         std::vector<index> possible_ends = opposites(origins[i], origins);
