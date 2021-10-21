@@ -134,6 +134,70 @@ std::vector<index> neighbors (index & origin, bool_cells & lattice) {
 }
 
 
+/*std::vector<index> neighbors (const bool_cells & data, const index & position) {
+    std::vector<index> result;
+    //if (result.empty())
+      //  return result;
+    if (position.first < 0 || position.first >= data.size() || position.second < 0 || position.second >= data[0].size())
+        return result;
+
+    if (position.first > 0)
+        result.push_back({ position.first - 1, position .second });
+    if (position.second > 0)
+        result.push_back({ position.first, position.second - 1 });
+    if (position.first < data.size() - 1)
+        result.push_back({ position.first + 1, position.second });
+    if (position.second < data.size() - 1)
+        result.push_back({ position.first, position.second + 1 });
+    return result;
+}*/
+
+/*bool check (bool_cells & data, int x, int y) {
+    if (x >= 0 && x < data.size())
+        if (y >= 0 && y < data.size())
+            return data[x][y];
+    return false;
+}
+
+
+std::vector<index> neighbors (bool_cells & lattice, index & position) {
+    std::vector<index> result;
+    int x = position.first;
+    int y = position.second;
+    if (check(lattice, x+1, y))
+        result.push_back(std::make_pair(x+1, y));
+    if (check(lattice, x, y+1))
+        result.push_back(std::make_pair(x, y+1));
+    if (check(lattice, x-1, y))
+        result.push_back(std::make_pair(x-1, y));
+    if (check(lattice, x, y-1))
+        result.push_back(std::make_pair(x, y-1));
+    return result;
+}*/
+
+
+/*std::vector<index> neighbors (const bool_cells & lattice, const index & position) {
+    std::vector<index> result;
+    if (position.first > 0)
+        if (lattice[position.first-1][position.second])
+            result.push_back({ position.first - 1, position .second });
+    if (position.second > 0)
+        if (lattice[position.first][position.second-1])
+            result.push_back({ position.first, position.second - 1 });
+    if (position.first < lattice.size() - 1)
+        if (lattice[position.first+1][position.second])
+            result.push_back({ position.first + 1, position.second });
+    if (position.second < lattice[0].size() - 1)
+        if (lattice[position.first][position.second+1])
+            result.push_back({ position.first, position.second + 1 });
+    return result;
+}*/
+
+
+
+
+
+
 std::vector<index> opposites (index & origin, std::vector<index> & origins) {
     std::vector<index> result;
     for (auto & i : origins)
