@@ -116,7 +116,7 @@ std::vector<index> possible_origin_points (bool_cells & lattice) {
 }
 
 
-std::vector<index> neighbors (index & origin, bool_cells & lattice) {
+/*std::vector<index> neighbors (index & origin, bool_cells & lattice) {
     std::vector<index> trues;
     if (origin.second != N-1)
         if (lattice[origin.first][origin.second+1])
@@ -152,7 +152,7 @@ std::vector<index> neighbors (index & origin, bool_cells & lattice) {
     return result;
 }*/
 
-/*bool check (bool_cells & data, int x, int y) {
+bool check (bool_cells & data, int x, int y) {
     if (x >= 0 && x < data.size())
         if (y >= 0 && y < data.size())
             return data[x][y];
@@ -160,7 +160,7 @@ std::vector<index> neighbors (index & origin, bool_cells & lattice) {
 }
 
 
-std::vector<index> neighbors (bool_cells & lattice, index & position) {
+std::vector<index> neighbors (index & position, bool_cells & lattice) {
     std::vector<index> result;
     int x = position.first;
     int y = position.second;
@@ -173,7 +173,7 @@ std::vector<index> neighbors (bool_cells & lattice, index & position) {
     if (check(lattice, x, y-1))
         result.push_back(std::make_pair(x, y-1));
     return result;
-}*/
+}
 
 
 /*std::vector<index> neighbors (const bool_cells & lattice, const index & position) {
