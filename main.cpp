@@ -116,8 +116,29 @@ std::vector<index> possible_origin_points (bool_cells & lattice) {
 }
 
 
+template <typename T>
+std::string toString (T val) {
+    std::ostringstream oss;
+    oss << val;
+    return oss.str();
+}
+
+
+template<typename T, size_t... Is>
+std::string tuple_to_string_impl (T const& t, std::index_sequence<Is...>) {
+    return ((toString(std::get<Is>(t)) + '\t') + ...);
+}
+
+template <class Tuple>
+std::string tuple_to_string (const Tuple& t) {
+    constexpr auto size = std::tuple_size<Tuple>{};
+    return tuple_to_string_impl(t, std::make_index_sequence<size>{});
+}
+
+
 std::vector<index> neighbors (index & origin, bool_cells & lattice) {
     std::vector<index> trues;
+    std::cout << tuple_to_string(origin) << std::endl;
     if (origin.second != N-1)
         if (lattice[origin.first][origin.second+1])
             trues.push_back(std::make_pair(origin.first, origin.second+1));
@@ -262,24 +283,7 @@ void mem_allocation_2d (bool_cells & vector, const int & dim) {
 }
 
 
-template <typename T>
-std::string toString (T val) {
-    std::ostringstream oss;
-    oss << val;
-    return oss.str();
-}
 
-
-template<typename T, size_t... Is>
-std::string tuple_to_string_impl (T const& t, std::index_sequence<Is...>) {
-    return ((toString(std::get<Is>(t)) + '\t') + ...);
-}
-
-template <class Tuple>
-std::string tuple_to_string (const Tuple& t) {
-    constexpr auto size = std::tuple_size<Tuple>{};
-    return tuple_to_string_impl(t, std::make_index_sequence<size>{});
-}
 
 
 void data_file_creation (const std::string & name, std::vector<data> & exp_data) {
