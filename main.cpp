@@ -67,7 +67,7 @@ int main () {
 void percolation_threshold (std::vector<data> & P_p) {
     for (auto & i : P_p)
         if (i.second >= 0.5) {
-            std::cout << "Percolation_threshold:\t" << i.second << std::endl;
+            std::cout << "Percolation_threshold:\t" << i.first << std::endl;
             break;
         }
 }
@@ -120,7 +120,7 @@ std::vector<index> possible_origin_points (bool_cells & lattice) {
         if (std::find(origins.begin(), origins.begin() + i, origins[i]) != origins.begin() + i)
             origins.erase(origins.begin() + i);
         else
-            i++;
+            ++i;
     }
     return origins;
 }
