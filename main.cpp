@@ -19,7 +19,7 @@ typedef std::vector<std::vector<std::pair<bool, bool>>> bool_cells; // First ind
 const int N = 10;
 const int left_border = 0;
 const int right_border = 9;
-const int number_of_experiments = 100;
+const int number_of_experiments = 150;
 
 
 
@@ -36,6 +36,8 @@ std::vector<index> percolation_nodes (int & nodes_count, const int & left, const
 void lattice_filling (std::vector<index> & occupied_cells, bool_cells & lattice);
 
 bool infinite_cluster (bool_cells & lattice);
+
+void percolation_threshold (std::vector<data> & P_p);
 
 void data_file_creation (const std::string & name, std::vector<data> & exp_data);
 
@@ -56,8 +58,18 @@ int main () {
         }
         P_p.emplace_back(std::make_pair(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments)));
     }
+    percolation_threshold(P_p);
     data_file_creation("test", P_p);
     return 0;
+}
+
+
+void percolation_threshold (std::vector<data> & P_p) {
+    for (auto & i : P_p)
+        if (i.second >= 0.5) {
+            std::cout << "Percolation_threshold:\t" << i.second << std::endl;
+            break;
+        }
 }
 
 
