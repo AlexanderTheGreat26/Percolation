@@ -41,21 +41,8 @@ void percolation_threshold (std::vector<data> & P_p);
 void data_file_creation (const std::string & name, std::vector<data> & exp_data);
 
 
-//Debug only functions:
-void plots (const std::string & name, const int & left, const int & right, const index & number);
-
-std::string exec (const std::string & str);
-
-void lattice_data_file_creation (const std::string & data_file_name, bool_cells & lattice);
-
-template <typename T>
-std::string toString (T val);
-
 
 int main () {
-    std::string trajectory_files_path = std::move(exec("rm -rf trajectories && mkdir trajectories && cd trajectories && echo $PWD"));
-    std::string trajectory_files_name = trajectory_files_path + '/' + "Nodes_coordinates";
-
     bool_cells lattice (N);
     std::vector<data> P_p;
     for (int i = 0; i < 81; ++i) {
@@ -64,14 +51,11 @@ int main () {
             mem_allocation_2d(lattice, N);
             std::vector<index> filled_nodes = std::move(percolation_nodes(i, left_border, right_border));
             lattice_filling(filled_nodes, lattice);
-            //lattice_data_file_creation(trajectory_files_name + toString(i) + '\t' + toString(j), lattice);
-            //plots(trajectory_files_name, left_border, right_border, std::make_pair(i, j));
             if (infinite_cluster(lattice))
                 ++infinite_clusters_count;
             vector_clear_2d(lattice);
         }
         P_p.emplace_back(std::make_pair(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments)));
-        std::cout << i << std::endl;
     }
     percolation_threshold(P_p);
     data_file_creation("test", P_p);
@@ -86,14 +70,6 @@ void percolation_threshold (std::vector<data> & P_p) {
             break;
         }
 }
-
-
-/*bool occupied_cell (index & cell, std::vector<index> & occupied_cells) {
-    bool ans = true;
-    for (auto & i : occupied_cells)
-        ans &= !(cell == i);
-    return ans;
-}*/
 
 
 bool occupied_cell (index & cell, std::vector<index> & occupied_cells) {
@@ -111,7 +87,6 @@ std::vector<index> percolation_nodes (int & nodes_count, const int & left, const
     std::uniform_int_distribution<> dis (left, right);
     std::vector<index> occupied_cells;
     occupied_cells.emplace_back(std::make_pair(dis(gen), dis(gen)));
-
     for (int k = 1; k < nodes_count; ++k) {
         index ij;
         do {
@@ -121,7 +96,6 @@ std::vector<index> percolation_nodes (int & nodes_count, const int & left, const
         } while (occupied_cell(ij, occupied_cells));
         occupied_cells.emplace_back(ij);
     }
-
     return occupied_cells;
 }
 
@@ -259,53 +233,4 @@ void mem_allocation_2d (bool_cells & vector, const int & dim) {
 void vector_clear_2d (bool_cells & vector) {
     for (auto & i : vector)
         i.clear();
-}
-
-
-//The functions bellow for debug only.
-void plots (const std::string & name, const int & left, const int & right, const index & number) {
-    std::string range = "[" + toString(left) + ":" + toString(right) + "]";
-        FILE *gp = popen("gnuplot  -persist", "w");
-        if (!gp) throw std::runtime_error("Error opening pipe to GNUplot.");
-        std::vector<std::string> stuff = {"set term jpeg size 700, 700",
-                                          "set output \'" + name + toString(number.first) + '\t' + toString(number.second) + ".jpg\'",
-                                          "set title \'Test: " + toString(number.first) + ' ' + toString(number.second) + '\'',
-                                          "set grid xtics ytics",
-                                          "set xrange " + range,
-                                          "set yrange " + range,
-                                          "set key off",
-                                          "set ticslevel 0",
-                                          "set border 4095",
-                                          "plot \'" + name + toString(number.first) + '\t' + toString(number.second) + ".txt\' using 1:2 pt 7"};
-        for (const auto & it: stuff)
-            fprintf(gp, "%s\n", it.c_str());
-        pclose(gp);
-}
-
-std::string exec (const std::string & str) {
-    const char* cmd = str.c_str();
-    std::array<char, 128> buffer;
-    std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) throw std::runtime_error("popen() failed!");
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
-        result += buffer.data();
-    result = result.substr(0, result.length()-1);
-    return result;
-}
-
-void lattice_data_file_creation (const std::string & data_file_name, bool_cells & lattice) {
-    std::ofstream fout;
-    int k = 0;
-    fout.open(data_file_name + '.' + "txt", std::ios::out | std::ios::trunc);
-    for (int i = 0; i < lattice.size(); ++i) {
-        for (int j = 0; j < lattice[i].size(); ++j) {
-            if (lattice[i][j].first) {
-                fout << i << '\t' << j << std::endl;
-                ++k;
-            }
-        }
-    }
-    std::cout << k << std::endl;
-    fout.close();
 }
