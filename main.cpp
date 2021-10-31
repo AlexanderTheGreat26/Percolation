@@ -19,7 +19,7 @@ typedef std::vector<std::vector<std::pair<bool, bool>>> bool_cells; // First ind
 const int N = 10;
 const int left_border = 0;
 const int right_border = 9;
-const int number_of_experiments = 10;
+const int number_of_experiments = 20;
 
 
 std::random_device rd;  // Will be used to obtain a seed for the random number engine
@@ -58,14 +58,14 @@ int main () {
 
     bool_cells lattice (N);
     std::vector<data> P_p;
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 81; ++i) {
         int infinite_clusters_count = 0;
         for (int j = 0; j < number_of_experiments; ++j) {
             mem_allocation_2d(lattice, N);
             std::vector<index> filled_nodes = std::move(percolation_nodes(i, left_border, right_border));
             lattice_filling(filled_nodes, lattice);
-            lattice_data_file_creation(trajectory_files_name + toString(i) + '\t' + toString(j), lattice);
-            plots(trajectory_files_name, left_border, right_border, std::make_pair(i, j));
+            //lattice_data_file_creation(trajectory_files_name + toString(i) + '\t' + toString(j), lattice);
+            //plots(trajectory_files_name, left_border, right_border, std::make_pair(i, j));
             if (infinite_cluster(lattice))
                 ++infinite_clusters_count;
             vector_clear_2d(lattice);
@@ -112,9 +112,6 @@ std::vector<index> percolation_nodes (int & nodes_count, const int & left, const
     std::vector<index> occupied_cells;
     occupied_cells.emplace_back(std::make_pair(dis(gen), dis(gen)));
 
-    if (nodes_count == 84)
-        std::cout << "84!\n";
-
     for (int k = 1; k < nodes_count; ++k) {
         index ij;
         do {
@@ -124,9 +121,6 @@ std::vector<index> percolation_nodes (int & nodes_count, const int & left, const
         } while (occupied_cell(ij, occupied_cells));
         occupied_cells.emplace_back(ij);
     }
-
-    if (occupied_cells.size() != nodes_count)
-        std::cout << "Here\n";
 
     return occupied_cells;
 }
