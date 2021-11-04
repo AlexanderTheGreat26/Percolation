@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <memory>
 #include <sstream>
-#include "omp.h"
 
 
 typedef std::pair<int, int> index;
@@ -20,14 +19,14 @@ typedef std::vector<std::vector<std::pair<bool, bool>>> bool_cells; // First ind
 const int N = 10;
 const int left_border = 0;
 const int right_border = 9;
-const int number_of_experiments = 20;
+const int number_of_experiments = 100;
 
 
 std::random_device rd;  // Will be used to obtain a seed for the random number engine
 std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
 
 
-void mem_allocation_2d (bool_cells & vector, const int &dim);
+void mem_allocation_2d (bool_cells & vector, const int & dim);
 
 void vector_clear_2d (bool_cells & vector);
 
@@ -41,18 +40,13 @@ void percolation_threshold (std::vector<data> & P_p);
 
 void data_file_creation (const std::string & name, std::vector<data> & exp_data);
 
-void data_clean (const std::string & name);
-
-void data_file_creation (const std::string & name, const data & point);
-
 void plot (const std::string & name, const int & left, const int & right);
 
 
 int main () {
-    data_clean ("test.txt");
     bool_cells lattice (N);
-    //std::vector<data> P_p;
-    for (int i = 10; i < 82; ++i) {
+    std::vector<data> P_p;
+    for (int i = 10; i < 70; ++i) {
         int infinite_clusters_count = 0;
         for (int j = 0; j < number_of_experiments; ++j) {
             mem_allocation_2d(lattice, N);
@@ -63,18 +57,13 @@ int main () {
             vector_clear_2d(lattice);
         }
         std::cout << "Computed:\t" << i << " from " << std::pow(N, 2) << std::endl;
-        //P_p.emplace_back(std::make_pair(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments)));
-        data_file_creation("test.txt", std::make_pair(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments)));
+        P_p.emplace_back(std::make_pair(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments)));
+        //data_file_creation("test.txt", std::make_pair(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments)));
     }
-    //percolation_threshold(P_p);
-    //data_file_creation("test", P_p);
+    percolation_threshold(P_p);
+    data_file_creation("test.txt", P_p);
     plot("test", 0, 1);
     return 0;
-}
-
-
-int clusters_computing () {
-
 }
 
 
@@ -231,7 +220,7 @@ std::string tuple_to_string (const Tuple& t) {
 
 void data_file_creation (const std::string & name, std::vector<data> & exp_data) {
     std::ofstream fout;
-    fout.open(name + '.' + "txt", std::ios::out | std::ios::trunc);
+    fout.open(name, std::ios::out | std::ios::trunc);
     for (auto & i : exp_data)
         fout << tuple_to_string(i) << std::endl;
     fout.close();
@@ -251,19 +240,6 @@ void vector_clear_2d (bool_cells & vector) {
 }
 
 
-void data_clean (const std::string & name) {
-    std::fstream(name, std::fstream::out);
-}
-
-
-void data_file_creation (const std::string & name, const data & point) {
-    std::ofstream fout;
-    fout.open(name, std::ios::app);
-    fout << tuple_to_string(point) << std::endl;
-    fout.close();
-}
-
-
 void plot (const std::string & name, const int & left, const int & right) {
     std::string range = "[" + toString(left) + ":" + toString(right) + "]";
     FILE *gp = popen("gnuplot  -persist", "w");
@@ -277,7 +253,10 @@ void plot (const std::string & name, const int & left, const int & right) {
                                       "set key off",
                                       "set ticslevel 0",
                                       "set border 4095",
-                                      "plot \'" + name + "\' using 1:2 w lines", "q"};
+                                      "plot \'" + name + ".txt\' using 1:2 w lines",
+                                      "set terminal wxt",
+                                      "set output",
+                                      "replot", "q"};
     for (const auto & it: stuff)
         fprintf(gp, "%s\n", it.c_str());
     pclose(gp);
