@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <memory>
 #include <sstream>
+#include "omp.h"
 
 
 typedef std::pair<int, int> index;
@@ -40,12 +41,18 @@ void percolation_threshold (std::vector<data> & P_p);
 
 void data_file_creation (const std::string & name, std::vector<data> & exp_data);
 
+void data_clean (const std::string & name);
+
+void data_file_creation (const std::string & name, const data & point);
+
+void plot (const std::string & name, const int & left, const int & right);
 
 
 int main () {
+    data_clean ("test.txt");
     bool_cells lattice (N);
-    std::vector<data> P_p;
-    for (int i = 0; i < 81; ++i) {
+    //std::vector<data> P_p;
+    for (int i = 10; i < 82; ++i) {
         int infinite_clusters_count = 0;
         for (int j = 0; j < number_of_experiments; ++j) {
             mem_allocation_2d(lattice, N);
@@ -55,11 +62,19 @@ int main () {
                 ++infinite_clusters_count;
             vector_clear_2d(lattice);
         }
-        P_p.emplace_back(std::make_pair(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments)));
+        std::cout << "Computed:\t" << i << " from " << std::pow(N, 2) << std::endl;
+        //P_p.emplace_back(std::make_pair(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments)));
+        data_file_creation("test.txt", std::make_pair(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments)));
     }
-    percolation_threshold(P_p);
-    data_file_creation("test", P_p);
+    //percolation_threshold(P_p);
+    //data_file_creation("test", P_p);
+    plot("test", 0, 1);
     return 0;
+}
+
+
+int clusters_computing () {
+
 }
 
 
@@ -233,4 +248,37 @@ void mem_allocation_2d (bool_cells & vector, const int & dim) {
 void vector_clear_2d (bool_cells & vector) {
     for (auto & i : vector)
         i.clear();
+}
+
+
+void data_clean (const std::string & name) {
+    std::fstream(name, std::fstream::out);
+}
+
+
+void data_file_creation (const std::string & name, const data & point) {
+    std::ofstream fout;
+    fout.open(name, std::ios::app);
+    fout << tuple_to_string(point) << std::endl;
+    fout.close();
+}
+
+
+void plot (const std::string & name, const int & left, const int & right) {
+    std::string range = "[" + toString(left) + ":" + toString(right) + "]";
+    FILE *gp = popen("gnuplot  -persist", "w");
+    if (!gp) throw std::runtime_error("Error opening pipe to GNUplot.");
+    std::vector<std::string> stuff = {"set term jpeg size 700, 700",
+                                      "set output \'" + name + ".jpg\'",
+                                      "set title \'P(p)\'",
+                                      "set grid xtics ytics",
+                                      "set xrange " + range,
+                                      "set yrange " + range,
+                                      "set key off",
+                                      "set ticslevel 0",
+                                      "set border 4095",
+                                      "plot \'" + name + "\' using 1:2 w lines", "q"};
+    for (const auto & it: stuff)
+        fprintf(gp, "%s\n", it.c_str());
+    pclose(gp);
 }
