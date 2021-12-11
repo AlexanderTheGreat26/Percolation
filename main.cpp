@@ -132,9 +132,11 @@ std::vector<index> possible_origin_points (bool_cells & lattice) {
 
 
 std::vector<index> neighbors (index & origin, bool_cells & lattice) {
-    std::vector<index> trues;
     int i = origin.first;
     int j = origin.second;
+
+    std::vector<index> trues;
+
     if (j != right_border)
         if (lattice[i][j+1].first)
             trues.emplace_back(std::make_pair(origin.first, origin.second+1));
