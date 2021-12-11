@@ -15,7 +15,7 @@ typedef std::pair<double, double> data;
 typedef std::vector<std::vector<std::pair<bool, bool>>> bool_cells; // First indicates filling of cell and
                                                                     // second indicates, if cell is visited.
 
-const int N = 5;
+const int N = 4;
 const int left_border = 0;
 const int right_border = N-1;
 const int number_of_experiments = 10000;
@@ -250,11 +250,11 @@ void vector_clear_2d (bool_cells & vector) {
 
 void plot (const std::string & name, const int & left, const int & right) {
     std::string range = "[" + toString(left) + ":" + toString(right) + "]";
-    FILE *gp = popen("gnuplot  -persist", "w");
+    FILE *gp = popen("gnuplot -persist", "w");
     if (!gp) throw std::runtime_error("Error opening pipe to GNUplot.");
     std::vector<std::string> stuff = {"set term jpeg size 700, 700",
                                       "set output \'" + name + ".jpg\'",
-                                      "set title \'P(p)\'",
+                                      "set title \'P(p), N = " + toString(N) + "\'",
                                       "set grid xtics ytics",
                                       "set xrange " + range,
                                       "set yrange " + range,
