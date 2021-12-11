@@ -15,9 +15,9 @@ typedef std::pair<double, double> data;
 typedef std::vector<std::vector<std::pair<bool, bool>>> bool_cells; // First indicates filling of cell and
                                                                     // second indicates, if cell is visited.
 
-const int N = 10;
+const int N = 5;
 const int left_border = 0;
-const int right_border = 9;
+const int right_border = N-1;
 const int number_of_experiments = 10000;
 
 
@@ -45,7 +45,7 @@ void plot (const std::string & name, const int & left, const int & right);
 int main () {
     bool_cells lattice (N);
     std::vector<data> P_p;
-    for (int i = 10; i < 60; ++i) {
+    for (int i = N; i < 60; ++i) {
         int infinite_clusters_count = 0;
         for (int j = 0; j < number_of_experiments; ++j) {
             mem_allocation_2d(lattice, N);
