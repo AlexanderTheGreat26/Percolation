@@ -115,13 +115,13 @@ std::vector<index> possible_origin_points (bool_cells & lattice) {
     std::vector<index> origins;
     for (int i = 0; i < N; ++i) {
         if (lattice[i][0].first)
-            origins.emplace_back(std::make_pair(i, 0));
+            origins.emplace_back(std::make_pair(i, left_border));
         if (lattice[i][N-1].first)
-            origins.emplace_back(std::make_pair(i, N-1));
+            origins.emplace_back(std::make_pair(i, right_border));
         if (lattice[0][i].first)
-            origins.emplace_back(std::make_pair(0, i));
+            origins.emplace_back(std::make_pair(left_border, i));
         if (lattice[N-1][i].first)
-            origins.emplace_back(std::make_pair(N-1, i));
+            origins.emplace_back(std::make_pair(right_border, i));
     }
 
     for (int i = 0; i < origins.size();) {
