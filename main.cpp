@@ -15,7 +15,7 @@ typedef std::pair<double, double> data;
 typedef std::vector<std::vector<std::pair<bool, bool>>> bool_cells; // First indicates filling of cell and
                                                                     // second indicates, if cell is visited.
 
-const int N = 6;
+const int N = 5;
 const int left_border = 0;
 const int right_border = N-1;
 const int number_of_experiments = 10000;
@@ -39,6 +39,9 @@ void percolation_threshold (std::vector<data> & P_p);
 
 void data_file_creation (const std::string & name, std::vector<data> & exp_data);
 
+template <typename T>
+std::string toString (T val);
+
 void plot (const std::string & name, const int & left, const int & right);
 
 
@@ -59,8 +62,8 @@ int main () {
         P_p.emplace_back(std::make_pair(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments)));
     }
     percolation_threshold(P_p);
-    data_file_creation("test.txt", P_p);
-    plot("test", 0, 1);
+    data_file_creation("test N = " + toString(N) + ".txt", P_p);
+    plot("test N = " + toString(N), 0, 1);
     return 0;
 }
 
