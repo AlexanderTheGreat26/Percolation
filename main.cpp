@@ -22,8 +22,8 @@ const int right_border = 9;
 const int number_of_experiments = 10000;
 
 
-std::random_device rd;  // Will be used to obtain a seed for the random number engine
-std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+std::random_device rd;  // Will be used to obtain a seed for the random number engine.
+std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd().
 
 
 void mem_allocation_2d (bool_cells & vector, const int & dim);
