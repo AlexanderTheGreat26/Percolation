@@ -19,7 +19,7 @@ typedef std::vector<std::vector<std::pair<bool, bool>>> bool_cells; // First ind
 const int N = 10;
 const int left_border = 0;
 const int right_border = 9;
-const int number_of_experiments = 100;
+const int number_of_experiments = 10000;
 
 
 std::random_device rd;  // Will be used to obtain a seed for the random number engine
@@ -46,7 +46,7 @@ void plot (const std::string & name, const int & left, const int & right);
 int main () {
     bool_cells lattice (N);
     std::vector<data> P_p;
-    for (int i = 10; i < 70; ++i) {
+    for (int i = 10; i < 60; ++i) {
         int infinite_clusters_count = 0;
         for (int j = 0; j < number_of_experiments; ++j) {
             mem_allocation_2d(lattice, N);
@@ -58,7 +58,6 @@ int main () {
         }
         std::cout << "Computed:\t" << i << " from " << std::pow(N, 2) << std::endl;
         P_p.emplace_back(std::make_pair(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments)));
-        //data_file_creation("test.txt", std::make_pair(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments)));
     }
     percolation_threshold(P_p);
     data_file_creation("test.txt", P_p);
@@ -134,17 +133,19 @@ std::vector<index> possible_origin_points (bool_cells & lattice) {
 
 std::vector<index> neighbors (index & origin, bool_cells & lattice) {
     std::vector<index> trues;
-    if (origin.second != N-1)
-        if (lattice[origin.first][origin.second+1].first)
+    int i = origin.first;
+    int j = origin.second;
+    if (j != right_border)
+        if (lattice[i][j+1].first)
             trues.emplace_back(std::make_pair(origin.first, origin.second+1));
-    if (origin.first != 0)
-        if (lattice[origin.first-1][origin.second].first)
+    if (i != left_border)
+        if (lattice[i-1][j].first)
             trues.emplace_back(std::make_pair(origin.first-1, origin.second));
-    if (origin.second != 0)
-        if (lattice[origin.first][origin.second-1].first)
+    if (j != left_border)
+        if (lattice[i][j-1].first)
             trues.emplace_back(std::make_pair(origin.first, origin.second-1));
-    if (origin.first != N-1)
-        if (lattice[origin.first+1][origin.second].first)
+    if (i != right_border)
+        if (lattice[i+1][j].first)
             trues.emplace_back(std::make_pair(origin.first+1, origin.second));
     return trues;
 }
