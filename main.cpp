@@ -120,46 +120,48 @@ std::vector<index> possible_origin_points (bool_cells & lattice) {
         if (lattice[N-1][i].first)
             origins.emplace_back(std::make_pair(N-1, i));
     }
+
     for (int i = 0; i < origins.size();) {
         if (std::find(origins.begin(), origins.begin() + i, origins[i]) != origins.begin() + i)
             origins.erase(origins.begin() + i);
         else
             ++i;
     }
+
     return origins;
 }
 
 
-std::vector<index> neighbors (index & origin, bool_cells & lattice) {
+std::vector<index> neighbors (index & origin, bool_cells & lattice, const int & left, const int & right) {
     int i = origin.first;
     int j = origin.second;
 
     std::vector<index> trues;
 
-    if (j != right_border)
+    if (j != right)
         if (lattice[i][j+1].first)
-            trues.emplace_back(std::make_pair(origin.first, origin.second+1));
-    if (i != left_border)
+            trues.emplace_back(std::make_pair(i, j+1));
+    if (i != left)
         if (lattice[i-1][j].first)
-            trues.emplace_back(std::make_pair(origin.first-1, origin.second));
-    if (j != left_border)
+            trues.emplace_back(std::make_pair(i-1, j));
+    if (j != left)
         if (lattice[i][j-1].first)
-            trues.emplace_back(std::make_pair(origin.first, origin.second-1));
-    if (i != right_border)
+            trues.emplace_back(std::make_pair(i, j-1));
+    if (i != right)
         if (lattice[i+1][j].first)
-            trues.emplace_back(std::make_pair(origin.first+1, origin.second));
+            trues.emplace_back(std::make_pair(i+1, j));
     return trues;
 }
 
 
-std::vector<index> opposites (index & origin, std::vector<index> & origins) {
+std::vector<index> opposites (index & origin, std::vector<index> & origins, const int & left, const int & right) {
     std::vector<index> result;
     for (auto i : origins)
-        if (origin.first == 0 && i.first == N-1 ||
-            origin.second == 0 && i.second == N-1 ||
-            origin.first == N-1 && i.first == 0 ||
-            origin.second == N-1 && i.second == 0)
-            result.push_back(i);
+        if (origin.first == left && i.first == right ||
+            origin.second == left && i.second == right ||
+            origin.first == right && i.first == left ||
+            origin.second == right && i.second == left)
+            result.emplace_back(i);
     return result;
 }
 
@@ -167,7 +169,7 @@ std::vector<index> opposites (index & origin, std::vector<index> & origins) {
 bool depth_first_search (bool_cells lattice, index & position, index & destination) {
     if (position == destination) return true;
     if (lattice[position.first][position.second].second) return false;
-    std::vector<index> nearest_neighbors = std::move(neighbors(position, lattice));
+    std::vector<index> nearest_neighbors = std::move(neighbors(position, lattice, left_border, right_border));
     for (auto & nearest_neighbor : nearest_neighbors) {
         int i = nearest_neighbor.first;
         int j = nearest_neighbor.second;
@@ -187,7 +189,7 @@ bool infinite_cluster (bool_cells & lattice) {
     if (origins_count < 2) return infinite_bit;
 
     for (int i = 0; i < origins_count; ++i) {
-        std::vector<index> possible_ends = opposites(origins[i], origins);
+        std::vector<index> possible_ends = opposites(origins[i], origins, left_border, right_border);
         for (int j = 0; j < possible_ends.size(); ++j) {
             if (possible_ends.empty()) continue;
             infinite_bit = depth_first_search(lattice, origins[i], possible_ends[j]);
@@ -252,6 +254,8 @@ void plot (const std::string & name, const int & left, const int & right) {
                                       "set grid xtics ytics",
                                       "set xrange " + range,
                                       "set yrange " + range,
+                                      "set xlabel \'p\'",
+                                      "set ylabel \'P\'",
                                       "set key off",
                                       "set ticslevel 0",
                                       "set border 4095",
@@ -259,7 +263,7 @@ void plot (const std::string & name, const int & left, const int & right) {
                                       "set terminal wxt",
                                       "set output",
                                       "replot", "q"};
-    for (const auto & it: stuff)
+    for (const auto & it : stuff)
         fprintf(gp, "%s\n", it.c_str());
     pclose(gp);
 }
