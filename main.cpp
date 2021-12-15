@@ -197,9 +197,8 @@ bool infinite_cluster (bool_cells & lattice) {
         for (int j = 0; j < possible_ends.size(); ++j) {
             if (possible_ends.empty()) continue;
             infinite_bit = depth_first_search(lattice, origins[i], possible_ends[j]);
-            if (infinite_bit) break;
+            if (infinite_bit) return infinite_bit;
         }
-        if (infinite_bit) break;
     }
 
     return infinite_bit;
