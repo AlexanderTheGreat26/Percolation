@@ -8,14 +8,14 @@
 #include <array>
 #include <algorithm>
 #include <sstream>
-//
+
 
 typedef std::pair<int, int> index;
 typedef std::pair<double, double> data;
 typedef std::vector<std::vector<std::pair<bool, bool>>> bool_cells; // First indicates filling of cell and
                                                                     // second indicates, if cell is visited.
 
-const int N = 4;
+const int N = 8;
 const int left_border = 0;
 const int right_border = N-1;
 const int number_of_experiments = 10000;
@@ -44,12 +44,25 @@ std::string toString (T val);
 
 void plot (const std::string & name, const int & left, const int & right);
 
+std::string exec (const std::string& str);
+
+void data_file_app (const std::string & name, const data &exp_data);
+
+bool is_equal(const double & x, const double & y);
+
 
 int main () {
     bool_cells lattice (N);
     std::vector<data> P_p;
-    for (int i = N; i < std::pow(N, 2); ++i) {
-        int infinite_clusters_count = 0;
+
+    int infinite_clusters_count;
+
+    exec("rm \'test N = " + toString(N) + ".txt\'");
+
+    int i = N;
+
+    do {
+        infinite_clusters_count = 0;
         for (int j = 0; j < number_of_experiments; ++j) {
             mem_allocation_2d(lattice, N);
             std::vector<index> filled_nodes = std::move(percolation_nodes(i, left_border, right_border));
@@ -59,12 +72,20 @@ int main () {
             vector_clear_2d(lattice);
         }
         std::cout << "Computed:\t" << i << " from " << std::pow(N, 2) << std::endl;
-        P_p.emplace_back(std::make_pair(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments)));
-    }
+        data current_data = std::make_pair(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments));
+        P_p.emplace_back(current_data);
+        data_file_app("test N = " + toString(N) + ".txt", current_data);
+        ++i;
+    } while(!is_equal(double(infinite_clusters_count)/double(number_of_experiments), 1));
     percolation_threshold(P_p);
-    data_file_creation("test N = " + toString(N) + ".txt", P_p);
+    //data_file_creation("test N = " + toString(N) + ".txt", P_p);
     plot("test N = " + toString(N), 0, 1);
     return 0;
+}
+
+
+bool is_equal(const double & x, const double & y) {
+    return std::fabs(x - y) < std::numeric_limits<double>::epsilon();
 }
 
 
@@ -269,4 +290,27 @@ void plot (const std::string & name, const int & left, const int & right) {
     for (const auto & it : stuff)
         fprintf(gp, "%s\n", it.c_str());
     pclose(gp);
+}
+
+
+#include <memory>
+//Just function for terminal input/output
+std::string exec (const std::string & str) {
+    const char* cmd = str.c_str();
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) throw std::runtime_error("popen() failed!");
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+        result += buffer.data();
+    result = result.substr(0, result.length()-1);
+    return result;
+}
+
+
+void data_file_app (const std::string & name, const data & exp_data) {
+    std::ofstream fout;
+    fout.open(name, std::ios::out | std::ios::app);
+    fout << tuple_to_string(exp_data) << std::endl;
+    fout.close();
 }
