@@ -215,8 +215,8 @@ bool infinite_cluster (bool_cells & lattice) {
 
     for (int i = 0; i < origins_count; ++i) {
         std::vector<index> possible_ends = opposites(origins[i], origins, left_border, right_border);
-        for (int j = 0; j < possible_ends.size(); ++j) {
-            if (possible_ends.empty()) continue;
+        if (possible_ends.empty()) continue;
+        for (auto & possible_end : possible_ends) {
             infinite_bit = depth_first_search(lattice, origins[i], possible_ends[j]);
             if (infinite_bit) return infinite_bit;
         }
