@@ -91,7 +91,7 @@ bool occupied_cell (index & cell, std::vector<index> & occupied_cells) {
 std::vector<index> percolation_nodes (int & nodes_count, const int & left, const int & right) {
     std::uniform_int_distribution<> dis (left, right);
     std::vector<index> occupied_cells;
-    occupied_cells.emplace_back(std::make_pair(dis(gen), dis(gen)));
+    occupied_cells.emplace_back(dis(gen), dis(gen));
     for (int k = 1; k < nodes_count; ++k) {
         index ij;
         do {
