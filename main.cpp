@@ -59,7 +59,7 @@ int main () {
             vector_clear_2d(lattice);
         }
         std::cout << "Computed:\t" << i << " from " << std::pow(N, 2) << std::endl;
-        P_p.emplace_back(std::make_pair(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments)));
+        P_p.emplace_back(double(i)/std::pow(N, 2), double(infinite_clusters_count)/double(number_of_experiments));
     }
     percolation_threshold(P_p);
     data_file_creation("test N = " + toString(N) + ".txt", P_p);
@@ -115,13 +115,13 @@ std::vector<index> possible_origin_points (bool_cells & lattice) {
     std::vector<index> origins;
     for (int i = 0; i < N; ++i) {
         if (lattice[i][0].first)
-            origins.emplace_back(std::make_pair(i, left_border));
+            origins.emplace_back(i, left_border);
         if (lattice[i][N-1].first)
-            origins.emplace_back(std::make_pair(i, right_border));
+            origins.emplace_back(i, right_border);
         if (lattice[0][i].first)
-            origins.emplace_back(std::make_pair(left_border, i));
+            origins.emplace_back(left_border, i);
         if (lattice[N-1][i].first)
-            origins.emplace_back(std::make_pair(right_border, i));
+            origins.emplace_back(right_border, i);
     }
 
     for (int i = 0; i < origins.size();) {
@@ -141,18 +141,14 @@ std::vector<index> neighbors (index & origin, bool_cells & lattice, const int & 
 
     std::vector<index> trues;
 
-    if (j != right)
-        if (lattice[i][j+1].first)
-            trues.emplace_back(std::make_pair(i, j+1));
-    if (i != left)
-        if (lattice[i-1][j].first)
-            trues.emplace_back(std::make_pair(i-1, j));
-    if (j != left)
-        if (lattice[i][j-1].first)
-            trues.emplace_back(std::make_pair(i, j-1));
-    if (i != right)
-        if (lattice[i+1][j].first)
-            trues.emplace_back(std::make_pair(i+1, j));
+    if ((j != right) && lattice[i][j+1].first)
+            trues.emplace_back(i, j+1);
+    if ((i != left) && lattice[i-1][j].first)
+            trues.emplace_back(i-1, j);
+    if ((j != left) && lattice[i][j-1].first)
+            trues.emplace_back(i, j-1);
+    if ((i != right) && lattice[i+1][j].first)
+            trues.emplace_back(i+1, j);
 
     return trues;
 }
@@ -193,9 +189,10 @@ bool infinite_cluster (bool_cells & lattice) {
     if (origins_count < 2) return infinite_bit;
 
     for (int i = 0; i < origins_count; ++i) {
-        std::vector<index> possible_ends = std::move(opposites(origins[i], origins, left_border, right_border));
-        for (auto & possible_end : possible_ends) {
-            infinite_bit = depth_first_search(lattice, origins[i], possible_end);
+        std::vector<index> possible_ends = opposites(origins[i], origins, left_border, right_border);
+        for (int j = 0; j < possible_ends.size(); ++j) {
+            if (possible_ends.empty()) continue;
+            infinite_bit = depth_first_search(lattice, origins[i], possible_ends[j]);
             if (infinite_bit) return infinite_bit;
         }
     }
